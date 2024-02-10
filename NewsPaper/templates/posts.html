@@ -1,0 +1,98 @@
+<!--  наследуемся от шаблона default.html, который мы создавали для flatpages -->
+{% extends 'flatpages/default.html' %}
+
+{% load custom_filters %}
+
+{% load custom_tags %}
+<!-- Название у нас будет products -->
+{% block title %}
+Posts
+{% endblock title %}
+
+
+{% block content %}
+   <h1>Все новости</h1>
+   <h3> Общее количество всех новостей: {{posts|length}}</h3>>
+
+
+    {% if perms.news.add_posts %}
+    <a href="{% url 'post_create' %}">Добавить новость</a>
+    {% endif %}
+    {% if perms.news.add_posts %}
+    <a href="{% url 'articles_create' %}">Добавить статью</a>
+    {% endif %}
+
+   <hr>
+   {% if posts%}
+      <table>
+          <tr>
+              <td> Заголовок</td>
+              <td> Дата публикации</td>
+              <td> Текст статьи/новости</td>
+              <td> Категория</td>
+              {% if perms.news.change_post or perms.news.delete_post %}
+                <td>Действия</td>
+                {% endif %}
+          </tr>
+          {% for post in posts %}
+          <tr>
+              <td>{{ post.title|censor }}</td>
+              <td>{{ time_now|date:'d M Y' }}</td>
+              <td>{{ post.text|censor|truncatewords:20 }}</td>
+              <td>{{ post.post_type }}</td>
+              <td>
+                  {% if post.post_type == 'NE' %}
+
+                    {% if perms.news.change_post %}
+                    <a href="{% url 'post_update' pk=post.id %}">Изменить новость</a>
+                    {% endif %}
+                    {% if perms.news.delete_post %}
+                    <a href="{% url 'post_delete' post.id %}">Удалить новость</a>
+                    {% endif %}
+
+                  {%else %}
+                    {% if perms.news.change_post %}
+                    <a href="{% url 'articles_update' pk=post.id %}">Изменить статью</a>
+                    {% endif %}
+                    {% if perms.news.delete_post %}
+                    <a href="{% url 'articles_delete' post.id %}">Удалить статью</a>
+                    {% endif %}
+                  {% endif %}
+              </td>
+
+
+          </tr>
+          {% endfor %}
+
+      </table>
+
+   {% else %}
+       <!-- Если товаров нет, говорим, что товаров нет ;) -->
+       <h2>Новостей нет!</h2>
+   {% endif %}
+
+{# Добавляем пагинацию на страницу #}
+
+   {# Информация о предыдущих страницах #}
+   {% if page_obj.has_previous %}
+       <a href="?{% url_replace page=1 %}">1</a>
+       {% if page_obj.previous_page_number != 1 %}
+           ...
+           <a href="?{% url_replace page=page_obj.previous_page_number %}">{{ page_obj.previous_page_number }}</a>
+       {% endif %}
+   {% endif %}
+
+   {# Информация о текущей странице #}
+   {{ page_obj.number }}
+
+   {# Информация о следующих страницах #}
+   {% if page_obj.has_next %}
+       <a href="?{% url_replace page=page_obj.next_page_number %}">{{ page_obj.next_page_number }}</a>
+       {% if paginator.num_pages != page_obj.next_page_number %}
+           ...
+           <a href="?{% url_replace page=page_obj.paginator.num_pages %}">{{ page_obj.paginator.num_pages }}</a>
+       {% endif %}
+   {% endif %}
+
+
+{% endblock content %}
